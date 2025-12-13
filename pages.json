@@ -1,0 +1,59 @@
+{
+	"pages": [{
+		"path": "pages/simple/login",
+		"style": {
+			"navigationBarTitleText": "违停巡检系统",
+			"enablePullDownRefresh": false
+		}
+	}, {
+		"path": "pages/violation/violation",
+		"style": {
+			"navigationBarTitleText": "违规车辆",
+			"navigationBarBackgroundColor": "#0081ff",
+			"navigationBarTextStyle": "white",
+			"navigationStyle": "custom"
+		}
+	}, {
+		"path": "pages/violation/add-violation",
+		"style": {
+			"navigationBarTitleText": "新增违规记录",
+			"navigationBarBackgroundColor": "#0081ff",
+			"navigationBarTextStyle": "white",
+			"navigationStyle": "custom"
+		}
+	}],
+	"tabBar": {
+		"custom": true,
+		"color": "#7A7E83",
+		"selectedColor": "#0081ff",
+		"backgroundColor": "#ffffff",
+		"list": [{
+				"pagePath": "pages/violation/add-violation",
+				"text": "违规登记"
+			},
+			{
+				"pagePath": "pages/violation/violation",
+				"text": "违规车辆"
+			}
+		]
+	},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"tui-(.*)": "thorui-uni/lib/thorui/tui-$1/tui-$1.vue",
+			"tn-(.*)": "@/components/tuniao-ui/components/tn-$1/tn-$1.vue",
+			"custom-tab-bar": "@/custom-tab-bar/index.vue"
+		}
+	},
+	"globalStyle": {
+		"mp-alipay": {
+			"transparentTitle": "always",
+			"allowsBounceVertical": "NO"
+		},
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "违停巡检系统",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"uniIdRouter": {}
+}

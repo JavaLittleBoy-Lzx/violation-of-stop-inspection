@@ -1,0 +1,20 @@
+{
+    "id": "violation-inspection-system",
+    "name": "violation-inspection-system",
+    "displayName": "违停巡检系统",
+    "version": "1.0.0",
+    "description": "违停车辆巡检管理系统",
+    "keywords": [
+        "违停巡检",
+        "车辆管理",
+        "违规处理",
+        "巡检系统",
+        "执法工具"
+    ],
+    "author": "您的团队",
+    "license": "MIT",
+    "dependencies": {
+        "dayjs": "^1.11.13",
+        "thorui-uni": "^3.0.0"
+    }
+}
