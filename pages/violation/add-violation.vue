@@ -262,9 +262,12 @@
 								<view class="owner-name">
 									<text class="name-text" @click="navigateToSearch(ownerInfo.name, 'name')">{{
 										ownerInfo.name || '未知车主' }}</text>
-									<!-- 月票车标记 -->
-									<view class="owner-vehicle-tag monthly-tag" v-if="ownerInfo.isMonthlyTicket">
+									<!-- 车辆类型标记 -->
+									<view class="owner-vehicle-tag monthly-tag" v-if="ownerInfo.isMonthlyTicket && !ownerInfo.hasVisitorReservation">
 										<text class="tag-text">月票车</text>
+									</view>
+									<view class="owner-vehicle-tag visitor-tag" v-else-if="ownerInfo.hasVisitorReservation">
+										<text class="tag-text">访客</text>
 									</view>
 								</view>
 								<view class="owner-phone" @click="makePhoneCall(ownerInfo.phone)"
@@ -285,25 +288,86 @@
 								<text class="detail-value">{{ ownerInfo.customerRoomNumber }}</text>
 							</view>
 
-							<!-- 学院/部门信息 -->
-							<view class="detail-row" v-if="ownerInfo.address">
+							<!-- 学院/部门信息 - 只在非访客时显示 -->
+							<view class="detail-row" v-if="ownerInfo.address && !ownerInfo.hasVisitorReservation">
 								<text class="detail-icon">🏢</text>
 								<text class="detail-label">{{ departmentLabel }}：</text>
 								<text class="detail-value">{{ ownerInfo.address }}</text>
 							</view>
 
-							<!-- 人员类别 -->
-							<view class="detail-row" v-if="ownerInfo.ownerCategory">
+							<!-- 人员类别 - 只在非访客时显示 -->
+							<view class="detail-row" v-if="ownerInfo.ownerCategory && !ownerInfo.hasVisitorReservation">
 								<text class="detail-icon">👥</text>
 								<text class="detail-label">人员类别：</text>
 								<text class="detail-value">{{ ownerInfo.ownerCategory }}</text>
 							</view>
 
 							<!-- 月票类型 -->
-							<view class="detail-row" v-if="ownerInfo.ticketName">
+							<view class="detail-row" v-if="ownerInfo.ticketName && !ownerInfo.hasVisitorReservation">
 								<text class="detail-icon">🎫</text>
 								<text class="detail-label">月票类型：</text>
 								<text class="detail-value monthly-ticket">{{ ownerInfo.ticketName }}</text>
+							</view>
+						</view>
+
+						<!-- 访客预约信息 -->
+						<view v-if="ownerInfo.hasVisitorReservation && ownerInfo.visitorReservations && ownerInfo.visitorReservations.length > 0"
+							class="visitor-reservation-section">
+							<view class="section-title">
+								<text class="title-icon">🚗</text>
+								<text class="title-text">访客车辆信息</text>
+							</view>
+
+							<view v-for="(reservation, index) in ownerInfo.visitorReservations" :key="index" 
+								class="visitor-reservation-card">
+								<!-- 访客姓名 -->
+								<view class="visitor-detail-row" v-if="reservation.visitorName">
+									<text class="visitor-icon">👤</text>
+									<text class="visitor-label">访客姓名：</text>
+									<text class="visitor-value">{{ reservation.visitorName }}</text>
+								</view>
+
+								<!-- 访客手机 -->
+								<view class="visitor-detail-row" v-if="reservation.visitorPhone">
+									<text class="visitor-icon">📱</text>
+									<text class="visitor-label">手机号码：</text>
+									<text class="visitor-value">{{ reservation.visitorPhone }}</text>
+								</view>
+
+								<!-- 访客类型 -->
+								<view class="visitor-detail-row" v-if="reservation.vipTypeName">
+									<text class="visitor-icon">🎫</text>
+									<text class="visitor-label">访客类型：</text>
+									<text class="visitor-value visitor-type">{{ reservation.vipTypeName }}</text>
+								</view>
+
+								<!-- 预约开始时间 -->
+								<view class="visitor-detail-row" v-if="reservation.gatewayTransitBeginTime">
+									<text class="visitor-icon">⏰</text>
+									<text class="visitor-label">开始时间：</text>
+									<text class="visitor-value visitor-time">{{ formatVisitorTime(reservation.gatewayTransitBeginTime) }}</text>
+								</view>
+
+								<!-- 预约结束时间 -->
+								<view class="visitor-detail-row" v-if="reservation.gatewayTransitEndTime">
+									<text class="visitor-icon">⏰</text>
+									<text class="visitor-label">结束时间：</text>
+									<text class="visitor-value visitor-time">{{ formatVisitorTime(reservation.gatewayTransitEndTime) }}</text>
+								</view>
+
+								<!-- 被访人 -->
+								<view class="visitor-detail-row" v-if="reservation.passName">
+									<text class="visitor-icon">👨‍💼</text>
+									<text class="visitor-label">被访人：</text>
+									<text class="visitor-value">{{ reservation.passName }}</text>
+								</view>
+
+								<!-- 被访部门 -->
+								<view class="visitor-detail-row" v-if="reservation.passDep">
+									<text class="visitor-icon">🏢</text>
+									<text class="visitor-label">被访部门：</text>
+									<text class="visitor-value">{{ reservation.passDep }}</text>
+								</view>
 							</view>
 						</view>
 
@@ -3641,15 +3705,20 @@ export default {
 								phone: data.ownerPhone || '未登记',
 								address: data.ownerAddress || '未登记', // customer_department
 
-								// 月票信息
+								// 月票信息 - 只有在不是访客预约时才标记为月票车
 								ticketName: data.vipTypeName || null,
-								isMonthlyTicket: !!data.vipTypeName,
+								isMonthlyTicket: !!data.vipTypeName && !data.hasVisitorReservation,
 								monthTicketName: data.vipTypeName,
 
 								// 扩展信息
 								ownerCategory: data.ownerCategory || null, // customer_address
 								customerCompany: data.customerCompany || null,
 								customerRoomNumber: data.customerRoomNumber || null,
+
+								// 访客预约信息
+								visitorReservations: data.visitorReservations || [],
+								hasVisitorReservation: data.hasVisitorReservation || false,
+								dataSource: data.dataSource || null,
 
 								// 其他
 								creditScore: 100, // 默认信用分
@@ -7829,6 +7898,25 @@ export default {
 				return `${yyyy}-${MM}-${dd} ${HH}:${mm}:${ss}`;
 			} catch (error) {
 				return dateTime || '未知时间';
+			}
+		},
+
+		// 格式化访客预约时间 - 格式：MM-dd HH:mm:ss
+		formatVisitorTime(dateTime) {
+			if (!dateTime) return '';
+			try {
+				const target = new Date(dateTime);
+				if (isNaN(target.getTime())) return dateTime;
+
+				const MM = String(target.getMonth() + 1).padStart(2, '0');
+				const dd = String(target.getDate()).padStart(2, '0');
+				const HH = String(target.getHours()).padStart(2, '0');
+				const mm = String(target.getMinutes()).padStart(2, '0');
+				const ss = String(target.getSeconds()).padStart(2, '0');
+
+				return `${MM}-${dd} ${HH}:${mm}:${ss}`;
+			} catch (error) {
+				return dateTime || '';
 			}
 		},
 
@@ -14157,5 +14245,128 @@ export default {
 
 .dropdown-item:active {
 	background: #f8f9fa;
+}
+
+/* 访客预约信息样式 */
+.visitor-reservation-section {
+	margin-top: 24rpx;
+	background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+	border-radius: 16rpx;
+	padding: 20rpx;
+	border: 1rpx solid #bae6fd;
+	box-shadow: 0 4rpx 12rpx rgba(14, 165, 233, 0.1);
+}
+
+.visitor-reservation-section .section-title {
+	display: flex;
+	align-items: center;
+	gap: 12rpx;
+	background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+	border-radius: 12rpx;
+	padding: 16rpx 20rpx;
+	margin-bottom: 16rpx;
+	box-shadow: 0 4rpx 12rpx rgba(14, 165, 233, 0.3);
+}
+
+.visitor-reservation-section .title-icon {
+	font-size: 28rpx;
+	filter: drop-shadow(0 2rpx 4rpx rgba(255, 255, 255, 0.3));
+}
+
+.visitor-reservation-section .title-text {
+	font-size: 30rpx;
+	font-weight: 600;
+	color: #fff;
+}
+
+.visitor-reservation-card {
+	background: #ffffff;
+	border-radius: 16rpx;
+	padding: 20rpx;
+	margin-bottom: 12rpx;
+	border: 1rpx solid #e0f2fe;
+	box-shadow: 0 2rpx 8rpx rgba(14, 165, 233, 0.1);
+	position: relative;
+	overflow: hidden;
+}
+
+.visitor-reservation-card:last-child {
+	margin-bottom: 0;
+}
+
+.visitor-reservation-card::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 4rpx;
+	background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
+}
+
+.visitor-detail-row {
+	display: flex;
+	align-items: flex-start;
+	margin-bottom: 16rpx;
+	padding: 10rpx 12rpx;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	border-radius: 8rpx;
+	border-left: 3rpx solid #0ea5e9;
+	transition: all 0.3s ease;
+}
+
+.visitor-detail-row:last-child {
+	margin-bottom: 0;
+}
+
+.visitor-detail-row .visitor-icon {
+	font-size: 24rpx;
+	width: 28rpx;
+	text-align: center;
+	margin-top: 2rpx;
+	margin-right: 8rpx;
+	flex-shrink: 0;
+}
+
+.visitor-detail-row .visitor-label {
+	font-size: 26rpx;
+	color: #666;
+	min-width: 160rpx;
+	flex-shrink: 0;
+	margin-right: 8rpx;
+	font-weight: 500;
+}
+
+.visitor-detail-row .visitor-value {
+	font-size: 28rpx;
+	color: #333;
+	flex: 1;
+	word-wrap: break-word;
+	line-height: 1.4;
+}
+
+.visitor-detail-row .visitor-value.visitor-type {
+	display: inline-flex;
+	align-items: center;
+	padding: 6rpx 12rpx;
+	background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+	color: #1e40af;
+	border: 1rpx solid #60a5fa;
+	border-radius: 16rpx;
+	font-weight: 600;
+	box-shadow: 0 2rpx 6rpx rgba(37, 99, 235, 0.1);
+}
+
+.visitor-detail-row .visitor-value.visitor-time {
+	color: #0c4a6e;
+	font-weight: 600;
+	font-family: 'Courier New', monospace;
+}
+
+/* 访客标签样式 */
+.visitor-tag {
+	background: linear-gradient(135deg, #0ea5e9, #0284c7);
+	color: white;
+	box-shadow: 0 2rpx 4rpx rgba(14, 165, 233, 0.3);
 }
 </style>
